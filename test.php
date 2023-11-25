@@ -1,6 +1,7 @@
 <?php 
 date_default_timezone_set('Asia/Tokyo');
 require 'lib/Timeline.php';
+include 'dev/func.php';
 include 'dev/database.php';
 
 include 'pg_header.php';
@@ -8,6 +9,8 @@ include 'pg_header.php';
 
 <h3>Daily Timeline</h3>
 <?php
+    _print($daily_events);
+    
     $start =new DateTimeImmutable('2023-12-21 1:00');
     $end = $start->add(new DateInterval('P1D'));
     $tbl = new Timeline($start, $end, 2, 10); // 2Hours :: 10Minutes
@@ -19,6 +22,8 @@ include 'pg_header.php';
 
 <h3>Weekly Timeline</h3>
 <?php 
+    _print($weekly_events);
+
     $start =new DateTimeImmutable('2023-11-26');
     $end = $start->add(new DateInterval('P1W'));
     $tbl =new Timeline($start, $end,24, 12*60); // 1Day :: 12Hours
@@ -30,6 +35,8 @@ include 'pg_header.php';
 
 <h3>Monthly Timeline</h3>
 <?php 
+    _print($monthly_events);
+
     $start =new DateTimeImmutable('2023-11-1');
     $end = $start->add(new DateInterval('P32D'));
     $tbl = new Timeline($start, $end,72, 12*60); // 3Days::12Hours
