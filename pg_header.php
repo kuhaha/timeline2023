@@ -27,6 +27,7 @@
     background: #000000;
   }
   .bg-blank{
+    color: black;
     background: whitesmoke; 
   }
 </style>

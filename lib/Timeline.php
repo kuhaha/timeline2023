@@ -8,12 +8,12 @@
 class Timeline{
   private $start_date; // start datetime, Datetime object
   private $end_date;  // end datetime, Datetime object
-  private $tk_unit;  // tick unit time in hours, int
-  private $pb_unit;  // PBUnit time in minutes, int 
+  private $tk_unit;  // Tick unit in hours, int
+  private $pb_unit;  // PBUnit in minutes, int. default $pb_unit = 20 * $tk_unit
 
   function __construct($start, $end, $tk_unit_h, $pb_unit_m=0)
   {
-    if ($pb_unit_m==0) $pb_unit_m = $tk_unit_h * 60;
+    if ($pb_unit_m==0) $pb_unit_m = 20 * $tk_unit_h;
     $this->start_date = $this->createDatetime($start);
     $this->end_date =  $this->createDatetime($end);
     $this->tk_unit = $this->createDateInterval('PT'.$tk_unit_h.'H');
@@ -93,6 +93,13 @@ class Timeline{
     return $ticks;
   }
   ////////////// VIEW //////////////
+  function draw($events, $tick_format='H:i', $pbu_format='H:i', $allow_partial=false){
+    $tbl_css = 'class="table table-bordered" style="width: 100%; table-layout:fixed;"';
+    $tbl = self::tag('tr', $this->timetick($tick_format), 'class="text-left"');
+    $tbl.= self::tag('tr', $this->timeline($events,$pbu_format, $allow_partial));
+    return self::tag('table', $tbl, $tbl_css);
+
+  }
   function timetick($format = 'H:i')
   {
     $width = round($this->getTKUnit() / $this->getPBUnit());
@@ -110,6 +117,7 @@ class Timeline{
   function timeline($events, $format='H:i', $allow_partial=false)
   {
     $bar = ''; 
+    $end_date_bpu = 
     $last_pbu = $partial_size = 0;
     foreach($events as $start => $data){
       $date1 = new DateTimeImmutable($start); 
@@ -134,7 +142,7 @@ class Timeline{
           // output event bar for the partial PBUnits
           $_width = ceil($partial_size / $this->getPBUnit());
           $cls = self::cls() . ' ' . 'progress-bar-striped';
-          $bar .= self::bar($_width, '', $cls) . PHP_EOL;
+          $bar .= self::bar($_width, $cls, '△', '一部予約有り') . PHP_EOL;
           $last_pbu += $_width;
           $partial_size = 0;
         }
@@ -142,23 +150,29 @@ class Timeline{
         if ($date1_pbu > $last_pbu){ 
           // output a blank bar
           $_width = $date1_pbu - $last_pbu;
-          $bar .= self::bar($_width, null, 'bg-blank');
+          $bar .= self::bar($_width, 'bg-blank', '〇', '予約可能');
         }
         // output the event bar
         $event = $data[1];
         $cls = self::cls();
-        $content = $date1->format($format) . ' - ' . $date2->format($format) ;
-        $bar .= self::bar($width, $content, $cls) . PHP_EOL;
+        $msg = $date1->format($format) . ' - ' . $date2->format($format) ;
+        $bar .= self::bar($width, $cls, $event, $msg) . PHP_EOL;
         $last_pbu = $date2_pbu;
       }
+    }
+    $end_pbu = $this->getPBUnits($this->end_date);
+    if ($end_pbu > $last_pbu){ 
+      // output a blank bar
+      $_width = $end_pbu - $last_pbu;
+      $bar .= self::bar($_width, 'bg-blank', '〇', '予約可能');
     }
     return $bar;
   }
   
-  static function bar($width, $content, $class='')
+  static function bar($width, $class='', $content, $tooltip=null)
   {
     if ($width < 1) return '';
-    $tooltip = $content ? sprintf('data-toggle="tooltip" title="%s"', $content): ''; 
+    $tooltip = $tooltip ? sprintf('data-toggle="tooltip" title="%s"', $tooltip): ''; 
     $pattern = '<div role="progressbar" class="progress-bar full-length %s" %s>%s</div>';
     $bar = sprintf($pattern, $class, $tooltip, $content);
     $bar = self::tag('div', $bar, 'class="progress"');
@@ -178,6 +192,9 @@ class Timeline{
     return $prefix . $class[$id++ % $k];
   }
 
+  private static function _q($value){
+    return '"'. $value .'"';
+  }
   /** tag(): enclose content by tags 
    **/
   public static function tag($tagname, $content, $attributes = null)
