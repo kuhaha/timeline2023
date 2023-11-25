@@ -6,7 +6,7 @@
 
 ## Display Units
 ```
-1 Tick = p PBUnits
+1 Tick = p PBUnits, default p=3
 1 Timeline  = m Ticks  = p x m PBUnits
 1 Event = k PBUnits
 ```
