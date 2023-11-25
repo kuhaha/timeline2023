@@ -6,9 +6,9 @@
 
 ## Display Units
 ```
-Tick = p PBUnits
-Row  = m Ticks  = p x m PBUnits
-Event= q PBUnits 
+1 Tick = p PBUnits
+1 Timeline  = m Ticks  = p x m PBUnits
+Event = q PBUnits
 ```
 
 Output: 
