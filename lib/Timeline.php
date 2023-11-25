@@ -3,7 +3,7 @@
  * Timeline is divided into Progress Bar Units (PBUnits) 
  *  p PBUnits form a Tick, thus
  *  1 Timeline = m Ticks = m * p PBUnits
- *  Event length is  to 1 Event = k PBUnits
+ *  1 Event = k PBUnits
 ************************************************/
 class Timeline{
   private $start_date; // start datetime, Datetime object
@@ -140,7 +140,7 @@ class Timeline{
         }
 
         if ($date1_pbu > $last_pbu){ 
-          // output a blank bar for a gap
+          // output a blank bar
           $_width = $date1_pbu - $last_pbu;
           $bar .= self::bar($_width, null, 'bg-blank');
         }

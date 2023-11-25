@@ -8,7 +8,7 @@
 ```
 1 Tick = p PBUnits
 1 Timeline  = m Ticks  = p x m PBUnits
-Event = q PBUnits
+1 Event = k PBUnits
 ```
 
 Output: 
