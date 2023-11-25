@@ -159,7 +159,7 @@ class Timeline{
   {
     if ($width < 1) return '';
     $tooltip = $content ? sprintf('data-toggle="tooltip" title="%s"', $content): ''; 
-    $pattern = '<div role="progressbar" class="progress-bar full-length %s" %s>%s</div></div>';
+    $pattern = '<div role="progressbar" class="progress-bar full-length %s" %s>%s</div>';
     $bar = sprintf($pattern, $class, $tooltip, $content);
     $bar = self::tag('div', $bar, 'class="progress"');
     return self::tag('td', $bar, 'class="pl-0 pr-0" colspan='.$width) . PHP_EOL; 
