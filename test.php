@@ -5,29 +5,65 @@ include 'dev/func.php';
 include 'dev/database.php';
 
 include 'pg_header.php';
+?>
 
-echo '<h3>Daily Timeline</h3>';
+<h2>Timeline Test Cases</h2>
+<h3>Daily Timeline</h3>
 
+Create a Timeline for <code>['1:00', '23:00']</code> with <code>2H</code> hour tick unit<br> 
+<code>$tbl = new Timeline('1:00', '23:00 ', 2);</code>
+<p>
+<code>echo $tbl->draw($events);// Use defaults</code>
+<?php
+$events = $daily_events;
 $start = new DateTimeImmutable('2023-12-21 1:00');
 $end = $start->add(new DateInterval('P1D')); // period=1Day
-$tbl = new Timeline($start, $end, 2);    // tk=2Hours pb=40Minutes
-echo $tbl->draw($daily_events);
-_print($daily_events);
+$tbl = new Timeline($start, $end, 2);    // tk=2Hours pb=tk/3=40Minutes
 
-echo '<h3>Weekly Timeline</h3>';
+echo $tbl->draw($events);
+_print($events);
+?>
 
+<h3>Weekly Timeline</h3>
+Create a Timeline for <code>['2023-11-26', '2023-12-02']</code> with <code>24H=1D</code> hour tick unit<br> 
+<code>$tbl = new Timeline('2023-11-26', '2023-12-02', 24);</code><br/>
+<code>$allow_partial = true;</code><br/>
+<code>$tk_format = 'n/d(D)'; // 12/1(Fri)</code><br/>
+<code>$pb_format = 'n/d H:i';// 12/1 11:10</code><br/>
+<p>
+<code>echo $tbl->draw($events, $tk_format, $pb_format, $allow_partial);</code>
+
+<?php
+$events = $weekly_events;
 $start =new DateTimeImmutable('2023-11-26');
 $end = $start->add(new DateInterval('P1W'));// period=1Week 
-$tbl =new Timeline($start, $end, 24); // tk=1Day pb=8Hours
-echo $tbl->draw($weekly_events, 'n/d(D)', 'n/d H:i', true);
-_print($weekly_events);
+$tbl =new Timeline($start, $end, 24); // tk=1Day pb=tk/3=480Minutes
 
-echo '<h3>Monthly Timeline</h3>';
+$allow_partial = true;
+$tk_format = 'n/d(D)'; // 12/1(Fri)
+$pb_format = 'n/d H:i';// 12/1 11:10
+echo $tbl->draw($events, $tk_format, $pb_format, $allow_partial);
+_print($events);
+?>
 
+<h3>Monthly Timeline</h3>
+Create a Timeline for <code>['2023-11-01', '2023-12-01']</code> with <code>72H=3D</code> hour tick unit<br> 
+<code>$tbl = new Timeline('2023-11-26', '2023-12-02', 72);</code><br/>
+<code>$allow_partial = true;</code><br/>
+<code>$tk_format = 'n/d(D)'; // 12/1(Fri)</code><br/>
+<code>$pb_format = 'n/d';// 12/1</code><br/>
+<p>
+<code>echo $tbl->draw($events, $tk_format, $pb_format, $allow_partial);</code>
+<?php
+$events = $monthly_events;
 $start =new DateTimeImmutable('2023-11-1');
 $end = $start->add(new DateInterval('P32D'));// period=32Days
-$tbl = new Timeline($start, $end,72); // tk=3Days, pb=24Hours
-echo $tbl->draw($monthly_events, 'n/d(D)', 'n/d', true);
-_print($monthly_events);
+$tbl = new Timeline($start, $end, 72); // tk=3Days, pb=tk/3=1440Minutes
+
+$allow_partial = true;
+$tk_format = 'n/d(D)';
+$pb_format = 'n/d';
+echo $tbl->draw($events, $tk_format, $pb_format, $allow_partial);
+_print($events);
 
 include 'pg_footer.php';

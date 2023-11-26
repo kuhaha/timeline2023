@@ -5,22 +5,24 @@
  *  1 Timeline = m Ticks = m * p PBUnits
  *  1 Event = k PBUnits
 ************************************************/
-class Timeline{
-  private $start_date; // start datetime, Datetime object
-  private $end_date;  // end datetime, Datetime object
-  private $tk_unit;  // Tick unit in hours, int
-  private $pb_unit;  // PBUnit in minutes, int. default $pb_unit = 20 * $tk_unit
 
-  function __construct($start, $end, $tk_unit_h, $pb_unit_m=0)
+class Timeline{
+  private $start_date; // start datetime, Datetime object or string
+  private $end_date;  // end datetime, Datetime object  or string
+  private $tk_unit_h;  // Tick unit in hours, int, default 2
+  private $pb_unit_m;  // PBUnit in minutes, int. default 0, means $pb_unit = 20 * $tk_unit
+
+  function __construct($start, $end, $tk_unit_h=2, $pb_unit_m=0)
   {
-    if ($pb_unit_m==0) $pb_unit_m = 20 * $tk_unit_h;
-    $this->start_date = $this->createDatetime($start);
-    $this->end_date =  $this->createDatetime($end);
-    $this->tk_unit = $this->createDateInterval('PT'.$tk_unit_h.'H');
-    $this->pb_unit = $this->createDateInterval('PT'.$pb_unit_m.'M');
+    $this->start_date = self::createDatetime($start);
+    $this->end_date =  self::createDatetime($end);
+    if ($pb_unit_m == 0) $pb_unit_m = 20 * $tk_unit_h;
+    $this->tk_unit_h = $this->createDateInterval('PT' . $tk_unit_h . 'H');
+    $this->pb_unit_m = $this->createDateInterval('PT' . $pb_unit_m . 'M');
   }
+ 
   ////////////// MODEL //////////////
-  function createDatetime($date)
+  static function createDatetime($date)
   {
     if ($date instanceof DateTimeImmutable){ 
       return $date;
@@ -28,7 +30,7 @@ class Timeline{
     return new DateTimeImmutable($date);
   }
  
-  function createDateInterval($period)
+  static function createDateInterval($period)
   {
     if ($period instanceof DateInterval) {
       return $period;
@@ -68,7 +70,7 @@ class Timeline{
    **/ 
   function getTKUnit()
   {
-    $diff = $this->tk_unit;
+    $diff = $this->tk_unit_h;
     return round($diff->d * 24 * 60 + $diff->h * 60 + $diff->i);
   }
 
@@ -76,7 +78,7 @@ class Timeline{
    **/ 
   function getPBUnit()
   {
-    $diff = $this->pb_unit;
+    $diff = $this->pb_unit_m;
     return round($diff->d * 24 * 60 + $diff->h * 60 + $diff->i);
   }
 
@@ -86,7 +88,7 @@ class Timeline{
   function getTicks($format='H:i')
   {
     $ticks = [];
-    $period = new DatePeriod($this->start_date, $this->tk_unit ,$this->end_date);
+    $period = new DatePeriod($this->start_date, $this->tk_unit_h ,$this->end_date);
     foreach($period as $p){
       array_push($ticks, $p->format($format));
     }
