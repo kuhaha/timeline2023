@@ -11,7 +11,8 @@ class Timeline{
   private $end_date;  // end datetime, Datetime object  or string
   private $tk_unit_h;  // Tick unit in hours, int, default 2
   private $pb_unit_m;  // PBUnit in minutes, int. default 0, means $pb_unit = 20 * $tk_unit
-
+  private $event_lists; // list of event_lists, each event_list corresponds to a timeline
+ 
   function __construct($start, $end, $tk_unit_h=2, $pb_unit_m=0)
   {
     $this->start_date = self::createDatetime($start);
@@ -19,9 +20,15 @@ class Timeline{
     if ($pb_unit_m == 0) $pb_unit_m = 20 * $tk_unit_h;
     $this->tk_unit_h = $this->createDateInterval('PT' . $tk_unit_h . 'H');
     $this->pb_unit_m = $this->createDateInterval('PT' . $pb_unit_m . 'M');
+    $this->event_lists = [];
   }
  
   ////////////// MODEL //////////////
+  function addEventList($event_list)
+  {
+    $this->event_lists += [$event_list];
+  }
+
   static function createDatetime($date)
   {
     if ($date instanceof DateTimeImmutable){ 
@@ -95,10 +102,12 @@ class Timeline{
     return $ticks;
   }
   ////////////// VIEW //////////////
-  function draw($events, $tick_format='H:i', $pbu_format='H:i', $allow_partial=false){
+  function draw($tick_format='H:i', $pbu_format='H:i', $allow_partial=false){
     $tbl_css = 'class="table table-bordered" style="width: 100%; table-layout:fixed;"';
     $tbl = self::tag('tr', $this->timetick($tick_format), 'class="text-left"');
-    $tbl.= self::tag('tr', $this->timeline($events,$pbu_format, $allow_partial));
+    foreach ($this->event_lists as $event_list){
+      $tbl.= self::tag('tr', $this->timeline($event_list, $pbu_format, $allow_partial));
+    }
     return self::tag('table', $tbl, $tbl_css);
 
   }
@@ -111,17 +120,16 @@ class Timeline{
   /**
    * draw(): draw an ordered list of events as progress bars in a timeline
    * @param
-   *   $events, list of events, ordered by 'start_time'. 
+   *   $event_list, list of events, ordered by 'start_time'. 
    *     each item is a key-value pair 'start_time'=>['end_time', content]
    *     ['2023-11-2 9:00'=>[2023-11-2 17:20, 'school'],'2023-12-12'=>[2023-12-13, 'trip']]
    *   $allow_partial, boolean, whether allow partial PBUnit 
    */
-  function timeline($events, $format='H:i', $allow_partial=false)
+  function timeline($event_list, $format='H:i', $allow_partial=false)
   {
     $bar = ''; 
-    $end_date_bpu = 
     $last_pbu = $partial_size = 0;
-    foreach($events as $start => $data){
+    foreach($event_list as $start => $data){
       $date1 = new DateTimeImmutable($start); 
       $date2 = new DateTimeImmutable($data[0]);
       if ($date1 > $this->end_date or $date2 < $this->start_date or $date1>=$date2){
