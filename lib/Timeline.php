@@ -123,6 +123,7 @@ class Timeline{
    *   $event_list, list of events, ordered by 'start_time'. 
    *     each item is a key-value pair 'start_time'=>['end_time', content]
    *     ['2023-11-2 9:00'=>[2023-11-2 17:20, 'school'],'2023-12-12'=>[2023-12-13, 'trip']]
+   *   $format, string, time format
    *   $allow_partial, boolean, whether allow partial PBUnit 
    */
   function timeline($event_list, $format='H:i', $allow_partial=false)
@@ -171,8 +172,7 @@ class Timeline{
       }
     }
     $end_pbu = $this->getPBUnits($this->end_date);
-    if ($end_pbu > $last_pbu){ 
-      // output a blank bar
+    if ($end_pbu > $last_pbu){ // output a blank bar
       $_width = $end_pbu - $last_pbu;
       $bar .= self::bar($_width, 'bg-blank', '〇', '予約可能');
     }
@@ -183,9 +183,9 @@ class Timeline{
   {
     if ($width < 1) return '';
     $tooltip = $tooltip ? sprintf('data-toggle="tooltip" title="%s"', $tooltip): ''; 
-    $pattern = '<div role="progressbar" class="progress-bar full-length %s" %s>%s</div>';
+    $pattern = '<div role="progressbar" class="progress-bar rounded full-length %s" %s>%s</div>';
     $bar = sprintf($pattern, $class, $tooltip, $content);
-    $bar = self::tag('div', $bar, 'class="progress"');
+    // $bar = self::tag('div', $bar, 'class="progress"');
     return self::tag('td', $bar, 'class="pl-0 pr-0" colspan='.$width) . PHP_EOL; 
   }
 
