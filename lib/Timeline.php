@@ -118,10 +118,10 @@ class Timeline{
     return self::tag('td', $this->getTicks($format), $attr);
   }
   /**
-   * draw(): draw an ordered list of events as progress bars in a timeline
+   * timeline(): build a timeline for the event list
    * @param
-   *   $event_list, list of events, ordered by 'start_time'. 
-   *     each item is a key-value pair 'start_time'=>['end_time', content]
+   *   $event_list, array, of events, ordered by 'start_time'. 
+   *     each item is a key-value pair 'start_time'=>['end_time', content], such as
    *     ['2023-11-2 9:00'=>[2023-11-2 17:20, 'school'],'2023-12-12'=>[2023-12-13, 'trip']]
    *   $format, string, time format
    *   $allow_partial, boolean, whether allow partial PBUnit 

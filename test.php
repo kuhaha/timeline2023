@@ -19,7 +19,7 @@ Create a Timeline for <code>['1:00', '23:00']</code> with <code>2H</code> hour t
 $event_list = $daily_events;
 $start = new DateTimeImmutable('2023-12-21 1:00');
 $end = $start->add(new DateInterval('P1D')); // period=1Day
-$tbl = new Timeline($start, $end, 2);    // tk=2Hours pb=tk/3=40Minutes
+$tbl = new Timeline($start, $end, 1, 10);    // tk=2Hours pb=tk/3=40Minutes
 $tbl->addEventList($event_list);
 echo $tbl->draw();
 _print($event_list);
@@ -39,7 +39,7 @@ Create a Timeline for <code>['2023-11-26', '2023-12-02']</code> with <code>24H=1
 $event_list = $weekly_events;
 $start = new DateTimeImmutable('2023-11-26');
 $end = $start->add(new DateInterval('P1W'));// period=1Week 
-$tbl = new Timeline($start, $end, 24); // tk=1Day pb=tk/3=480Minutes
+$tbl = new Timeline($start, $end, 24, 60); // tk=1Day pb=tk/3=480Minutes
 $tbl->addEventList($event_list);
 
 $allow_partial = true;
