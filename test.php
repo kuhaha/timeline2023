@@ -16,13 +16,16 @@ Create a Timeline for <code>['1:00', '23:00']</code> with <code>2H</code> hour t
 <p>
 <code>echo $tbl->draw(); // Use defaults</code>
 <?php
-$event_list = $daily_events;
 $start = new DateTimeImmutable('2023-12-21 1:00');
 $end = $start->add(new DateInterval('P1D')); // period=1Day
-$tbl = new Timeline($start, $end, 1, 10);    // tk=2Hours pb=tk/3=40Minutes
-$tbl->addEventList($event_list);
-echo $tbl->draw();
-_print($event_list);
+$tbl = new Timeline($start, $end, 2);    // Every 2 hours
+$tbl->addEventList($daily_events1);
+$tbl->addEventList($daily_events2);
+$tk_format = 'H';
+$pb_format = 'H:i';
+$allow_partial = true;
+echo $tbl->draw($tk_format, $pb_format, $allow_partial);
+_print($daily_events1 + $daily_events2);
 ?>
 
 <h3>Weekly Timeline</h3>
@@ -39,7 +42,7 @@ Create a Timeline for <code>['2023-11-26', '2023-12-02']</code> with <code>24H=1
 $event_list = $weekly_events;
 $start = new DateTimeImmutable('2023-11-26');
 $end = $start->add(new DateInterval('P1W'));// period=1Week 
-$tbl = new Timeline($start, $end, 24, 60); // tk=1Day pb=tk/3=480Minutes
+$tbl = new Timeline($start, $end, 24); // Everyday
 $tbl->addEventList($event_list);
 
 $allow_partial = true;
@@ -60,9 +63,9 @@ Create a Timeline for <code>['2023-11-01', '2023-12-01']</code> with <code>72H=3
 <code>echo $tbl->draw($tk_format, $pb_format, $allow_partial);</code>
 <?php
 $event_list = $monthly_events;
-$start =new DateTimeImmutable('2023-11-1');
+$start = new DateTimeImmutable('2023-11-1');
 $end = $start->add(new DateInterval('P32D'));// period=32Days
-$tbl = new Timeline($start, $end, 72); // tk=3Days, pb=tk/3=1440Minutes
+$tbl = new Timeline($start, $end, 72); // Every 3 Days
 $tbl->addEventList($event_list);
 
 $allow_partial = true;

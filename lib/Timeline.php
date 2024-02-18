@@ -1,32 +1,31 @@
 <?php
 /** Timeline class
- * Timeline is divided into Progress Bar Units (PBUnits) 
- *  p PBUnits form a Tick, thus
+ * Timeline is divided into Progress Bar Units (PBUs) 
+ *  p PBUs form a Tick, 
  *  1 Timeline = m Ticks = m * p PBUnits
  *  1 Event = k PBUnits
 ************************************************/
 
 class Timeline{
-  private $start_date; // start datetime, Datetime object or string
-  private $end_date;  // end datetime, Datetime object  or string
-  private $tk_unit_h;  // Tick unit in hours, int, default 2
-  private $pb_unit_m;  // PBUnit in minutes, int. default 0, means $pb_unit = 20 * $tk_unit
-  private $event_lists; // list of event_lists, each event_list corresponds to a timeline
- 
-  function __construct($start, $end, $tk_unit_h=2, $pb_unit_m=0)
+  private $start; // start datetime, Datetime object or string
+  private $end;  // end datetime, Datetime object  or string
+  private $tk_unit;  // Tick unit, DateInterval, default '2H' i.e., 120M  
+  private $pb_unit;  // PBUnit, DateInterval, default $tk_unit*60/20= '6M'
+  private $groups; // list of groups, each event_list corresponds to a timeline
+
+  function __construct($start, $end, $tk_unit_h=2, $pk_unit_n=20)
   {
-    $this->start_date = self::createDatetime($start);
-    $this->end_date =  self::createDatetime($end);
-    if ($pb_unit_m == 0) $pb_unit_m = 20 * $tk_unit_h;
-    $this->tk_unit_h = $this->createDateInterval('PT' . $tk_unit_h . 'H');
-    $this->pb_unit_m = $this->createDateInterval('PT' . $pb_unit_m . 'M');
-    $this->event_lists = [];
+    $this->start = self::createDatetime($start);
+    $this->end =  self::createDatetime($end);
+    $this->tk_unit = $this->createDateInterval('PT' . $tk_unit_h . 'H');
+    $this->pb_unit = $this->createDateInterval('PT' . ($pk_unit_n * $tk_unit_h) . 'M');
+    $this->groups = [];
   }
  
   ////////////// MODEL //////////////
-  function addEventList($event_list)
+  function addEventList($items)
   {
-    $this->event_lists += [$event_list];
+    $this->groups[] = $items;
   }
 
   static function createDatetime($date)
@@ -42,15 +41,23 @@ class Timeline{
     if ($period instanceof DateInterval) {
       return $period;
     }
-    return  new DateInterval($period);
+    return new DateInterval($period);
   }
 
   function getStartDate(){
-    return $this->start_date;
+    return $this->start;
   }
 
   function getEndDate(){
-    return $this->end_date;
+    return $this->end;
+  }
+
+  /** getPBUnit(): return PBUnit time in minutes 
+   **/ 
+  function getPBUnit()
+  {
+    $diff = $this->pb_unit;
+    return round($diff->d * 24 * 60 + $diff->h * 60 + $diff->i);
   }
 
   /** getMinutes(): return MINUTEs between two dates  
@@ -58,7 +65,7 @@ class Timeline{
    **/ 
   function getMinutes($date1, $date2 = null)
   {
-    if (!$date2) $date2 = $this->start_date;
+    if (!$date2) $date2 = $this->start;
     $diff= abs($date1->getTimestamp() - $date2->getTimestamp()) / 60.0;
     return round($diff);
   }
@@ -77,17 +84,9 @@ class Timeline{
    **/ 
   function getTKUnit()
   {
-    $diff = $this->tk_unit_h;
+    $diff = $this->tk_unit;
     return round($diff->d * 24 * 60 + $diff->h * 60 + $diff->i);
-  }
-
-  /** getPBUnit(): return PBUnit time in minutes 
-   **/ 
-  function getPBUnit()
-  {
-    $diff = $this->pb_unit_m;
-    return round($diff->d * 24 * 60 + $diff->h * 60 + $diff->i);
-  }
+  } 
 
   /** getTicks(): return a list of formatted datetime strings, e.g.,
    *  ['1:00', '3:00', ..., '23:00'], ['11/5(Sun)','11/6(Mon)',...] 
@@ -95,18 +94,27 @@ class Timeline{
   function getTicks($format='H:i')
   {
     $ticks = [];
-    $period = new DatePeriod($this->start_date, $this->tk_unit_h ,$this->end_date);
+    $period = new DatePeriod($this->start, $this->tk_unit  ,$this->end);
     foreach($period as $p){
       array_push($ticks, $p->format($format));
     }
     return $ticks;
   }
   ////////////// VIEW //////////////
-  function draw($tick_format='H:i', $pbu_format='H:i', $allow_partial=false){
+  /**
+   * draw():   
+   *
+   * @param string $tick_format
+   * @param string $pbu_format
+   * @param boolean $allow_partial
+   * @return void
+   */
+  function draw($tick_format='H:i', $pbu_format='H:i', $allow_partial=false)
+  {
     $tbl_css = 'class="table table-bordered" style="width: 100%; table-layout:fixed;"';
     $tbl = self::tag('tr', $this->timetick($tick_format), 'class="text-left"');
-    foreach ($this->event_lists as $event_list){
-      $tbl.= self::tag('tr', $this->timeline($event_list, $pbu_format, $allow_partial));
+    foreach ($this->groups as $items){
+      $tbl.= self::tag('tr', $this->timeline($items, $pbu_format, $allow_partial));
     }
     return self::tag('table', $tbl, $tbl_css);
 
@@ -117,23 +125,24 @@ class Timeline{
     $attr= sprintf('class="pl-0" colspan="%d"', $width);
     return self::tag('td', $this->getTicks($format), $attr);
   }
+
   /**
    * timeline(): build a timeline for the event list
    * @param
-   *   $event_list, array, of events, ordered by 'start_time'. 
+   *   $items, array, of events, ordered by 'start_time'. 
    *     each item is a key-value pair 'start_time'=>['end_time', content], such as
    *     ['2023-11-2 9:00'=>[2023-11-2 17:20, 'school'],'2023-12-12'=>[2023-12-13, 'trip']]
    *   $format, string, time format
    *   $allow_partial, boolean, whether allow partial PBUnit 
    */
-  function timeline($event_list, $format='H:i', $allow_partial=false)
+  function timeline($items, $format='H:i', $allow_partial=false)
   {
     $bar = ''; 
     $last_pbu = $partial_size = 0;
-    foreach($event_list as $start => $data){
+    foreach($items as $start => $data){
       $date1 = new DateTimeImmutable($start); 
       $date2 = new DateTimeImmutable($data[0]);
-      if ($date1 > $this->end_date or $date2 < $this->start_date or $date1>=$date2){
+      if ($date1 > $this->end or $date2 < $this->start or $date1>=$date2){
         continue;
       }
       $date1_pbu = $this->getPBUnits($date1);
@@ -171,7 +180,7 @@ class Timeline{
         $last_pbu = $date2_pbu;
       }
     }
-    $end_pbu = $this->getPBUnits($this->end_date);
+    $end_pbu = $this->getPBUnits($this->end);
     if ($end_pbu > $last_pbu){ // output a blank bar
       $_width = $end_pbu - $last_pbu;
       $bar .= self::bar($_width, 'bg-blank', '〇', '予約可能');
@@ -202,23 +211,19 @@ class Timeline{
     return $prefix . $class[$id++ % $k];
   }
 
-  private static function _q($value){
-    return '"'. $value .'"';
-  }
   /** tag(): enclose content by tags 
    **/
   public static function tag($tagname, $content, $attributes = null)
   {
-    $stag = '<' . $tagname . ' ' . $attributes . '>';
-    $ctag = '</' . $tagname .'>' . PHP_EOL;
+    $s_tag = '<' . $tagname . ' ' . $attributes . '>';
+    $c_tag = '</' . $tagname .'>' . PHP_EOL;
     $elements = '';
     if (is_array($content)) {
       foreach ($content as $k => $v) {
-        $elements .= $stag. $v . $ctag;  
+        $elements .= $s_tag. $v . $c_tag;  
       }
-    }else{
-      return $stag . $content . $ctag;
+      return $elements;
     }
-    return $elements;
+    return $s_tag . $content . $c_tag;    
   }
 }
